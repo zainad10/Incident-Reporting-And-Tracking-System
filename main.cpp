@@ -751,3 +751,138 @@ public:
         return emp;
     }
 };
+class Incident {
+public:
+    int id;
+    string reportName;
+    string reporterCNIC;
+    string location;
+    string type;
+    string assignedTeam;
+    string status;
+    string reporterRole;
+    string reportTime;
+    
+    static int nextId;
+
+    Incident() {
+        id = nextId++;
+        status = "Pending";
+        reportTime = getCurrentTime();
+    }
+
+    Incident(string name, string cnic, string loc, string t, string team) {
+        id = nextId++;
+        reportName = name;
+        reporterCNIC = cnic;
+        location = loc;
+        type = t;
+        assignedTeam = team;
+        status = "Pending";
+        reporterRole = "Normal User";
+        reportTime = getCurrentTime();
+    }
+
+    void displayForm() {
+        cout << "\n" << string(40, '=') << "\n";
+        cout << "      INCIDENT REPORT FORM\n";
+        cout << string(40, '=') << "\n";
+        cout << "|-- Incident ID: " << id << "\n";
+        cout << "|-- Reporter Name: " << reportName << "\n";
+        cout << "|-- Reporter CNIC: " << reporterCNIC << "\n";
+        cout << "|-- Reporter Role: " << reporterRole << "\n";
+        cout << "|-- Location: " << location << "\n";
+        cout << "|-- Incident Type: " << type << "\n";
+        cout << "|-- Assigned Team: " << assignedTeam << "\n";
+        cout << "|-- Status: " << status << "\n";
+        cout << "|-- Reporting Time: " << reportTime << "\n";
+        cout << string(40, '=') << "\n";
+    }
+
+    string toFileString() {
+        return to_string(id) + "|" + reportName + "|" + reporterCNIC + "|" + 
+               location + "|" + type + "|" + assignedTeam + "|" + status + "|" + 
+               reporterRole + "|" + reportTime;
+    }
+
+    static Incident fromFileString(string line) {
+        Incident inc;
+        int pos = 0;
+        
+        pos = line.find("|");
+        inc.id = stoi(line.substr(0, pos));
+        line.erase(0, pos + 1);
+        
+        pos = line.find("|");
+        inc.reportName = line.substr(0, pos);
+        line.erase(0, pos + 1);
+        
+        pos = line.find("|");
+        inc.reporterCNIC = line.substr(0, pos);
+        line.erase(0, pos + 1);
+        
+        pos = line.find("|");
+        inc.location = line.substr(0, pos);
+        line.erase(0, pos + 1);
+        
+        pos = line.find("|");
+        inc.type = line.substr(0, pos);
+        line.erase(0, pos + 1);
+        
+        pos = line.find("|");
+        inc.assignedTeam = line.substr(0, pos);
+        line.erase(0, pos + 1);
+        
+        pos = line.find("|");
+        inc.status = line.substr(0, pos);
+        line.erase(0, pos + 1);
+        
+        pos = line.find("|");
+        inc.reporterRole = line.substr(0, pos);
+        line.erase(0, pos + 1);
+        
+        inc.reportTime = line;
+        
+        return inc;
+    }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
