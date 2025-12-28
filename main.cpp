@@ -1009,6 +1009,148 @@ public:
         }
     }
 
+    void createDefaultData() {
+        Team itTeam("IT Support", "IT", "admin");
+        Team hrTeam("HR Team", "HR", "admin");
+        Team opsTeam("Operations", "Operations", "admin");
+        
+        teams.push_back(itTeam);
+        teams.push_back(hrTeam);
+        teams.push_back(opsTeam);
+        
+        Employee admin("admin", "admin123", "35201-1234567-0", "admin", "IT Support", "IT");
+        Employee emp1("rozeen", "rozeen123", "35201-1234567-1", "team_member", "IT Support", "IT");
+        Employee emp2("rameen", "rameen123", "35201-1234567-2", "team_head", "HR Team", "HR");
+        Employee emp3("ali", "ali123", "35201-1234567-3", "dept_head", "Operations", "Operations");
+        Employee emp4("zaina", "zaina123", "35201-1234567-4", "team_member", "IT Support", "IT");
+        Employee emp5("eman", "eman123", "35201-1234567-5", "team_member", "HR Team", "HR");
+        Employee emp6("ahmed", "ahmed123", "35201-1234567-6", "team_member", "Operations", "Operations");
+        
+        employees.push_back(admin);
+        employees.push_back(emp1);
+        employees.push_back(emp2);
+        employees.push_back(emp3);
+        employees.push_back(emp4);
+        employees.push_back(emp5);
+        employees.push_back(emp6);
+        
+        employeeMap["admin"] = admin;
+        employeeMap["rozeen"] = emp1;
+        employeeMap["rameen"] = emp2;
+        employeeMap["ali"] = emp3;
+        employeeMap["zaina"] = emp4;
+        employeeMap["eman"] = emp5;
+        employeeMap["ahmed"] = emp6;
+        for (Team& team : teams) {
+            if (team.name == "IT Support") {
+                team.members.push_back("admin");
+                team.members.push_back("rozeen");
+                team.members.push_back("zaina");
+            }
+            else if (team.name == "HR Team") {
+                team.members.push_back("rameen");
+                team.members.push_back("eman");
+            }
+            else if (team.name == "Operations") {
+                team.members.push_back("ali");
+                team.members.push_back("ahmed");
+            }
+        }
+        Incident inc1("Network Issue in Server Room", "35201-1234567-1", "Server Room, Floor 3", "Network Issue", "IT Support");
+        inc1.reporterRole = "team_member";
+        inc1.status = "Solved";
+        incidents.push_back(inc1);
+        incidentTypeCount["Network Issue"] = 1;
+        
+        Incident inc2("Software Bug in Payroll System", "35201-1234567-0", "Main Office", "Software Bug", "IT Support");
+        inc2.reporterRole = "admin";
+        incidents.push_back(inc2);
+        incidentTypeCount["Software Bug"] = 1;
+        
+        Incident inc3("Employee Conflict", "35201-1234567-2", "HR Department", "Other", "HR Team");
+        inc3.reporterRole = "team_head";
+        incidents.push_back(inc3);
+        incidentTypeCount["Other"] = 1;
+        
+        for (Incident& inc : incidents) {
+            incidentQueue.enqueue(inc);
+            priorityQueue.push(PriorityIncident(inc.id, inc.type, calculatePriority(inc.type)));
+        }
+        for (Team& team : teams) {
+            if (team.name == "IT Support") {
+                team.totalCases = 2;
+                team.solvedCases = 1;
+            }
+            else if (team.name == "HR Team") {
+                team.totalCases = 1;
+                team.solvedCases = 0;
+            }
+        }
+        
+        logActivity("System initialized with default data");
+    }
+
+    void logActivity(string activity) {
+        string logEntry = getCurrentTime() + " - " + activity;
+        activityLog.push(logEntry);
+    }
+
+    void saveData() {
+        ofstream empFile(EMP_FILE);
+        for (Employee emp : employees) {
+            empFile << emp.toFileString() << endl;
+        }
+        empFile.close();
+
+        ofstream teamFile(TEAM_FILE);
+        for (Team team : teams) {
+            teamFile << team.toFileString() << endl;
+        }
+        teamFile.close();
+
+        ofstream incFile(INC_FILE);
+        for (Incident inc : incidents) {
+            incFile << inc.toFileString() << endl;
+        }
+        incFile.close();
+    }
+
+    void loadData() {
+        ifstream empFile(EMP_FILE);
+        if (empFile.is_open()) {
+            string line;
+            while (getline(empFile, line)) {
+                Employee emp = Employee::fromFileString(line);
+                employees.push_back(emp);
+                employeeMap[emp.username] = emp;
+            }
+            empFile.close();
+        }
+
+        ifstream teamFile(TEAM_FILE);
+        if (teamFile.is_open()) {
+            string line;
+            while (getline(teamFile, line)) {
+                Team team = Team::fromFileString(line);
+                teams.push_back(team);
+            }
+            teamFile.close();
+        }
+
+        ifstream incFile(INC_FILE);
+        if (incFile.is_open()) {
+            string line;
+            while (getline(incFile, line)) {
+                Incident inc = Incident::fromFileString(line);
+                incidents.push_back(inc);
+                
+                incidentTypeCount[inc.type]++;
+                priorityQueue.push(PriorityIncident(inc.id, inc.type, calculatePriority(inc.type)));
+            }
+            incFile.close();
+        }
+    }
+
 
 
 
