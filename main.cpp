@@ -689,3 +689,65 @@ string getCurrentTime() {
     dt.pop_back();
     return dt;
 }
+class Employee {
+public:
+    string username;
+    string password;
+    string cnic;
+    string role;
+    string team;
+    string department;
+
+    Employee() {}
+
+    Employee(string u, string p, string c, string r, string t, string d) {
+        username = u;
+        password = p;
+        cnic = c;
+        role = r;
+        team = t;
+        department = d;
+    }
+
+    void display() {
+        cout << "|-- Username: " << username << "\n";
+        cout << "|-- CNIC: " << cnic << "\n";
+        cout << "|-- Role: " << role << "\n";
+        cout << "|-- Team: " << team << "\n";
+        cout << "|-- Department: " << department << "\n";
+        cout << "___________________________________________________________________\n";
+    }
+
+    string toFileString() {
+        return username + "|" + password + "|" + cnic + "|" + role + "|" + team + "|" + department;
+    }
+
+    static Employee fromFileString(string line) {
+        Employee emp;
+        int pos = 0;
+        
+        pos = line.find("|");
+        emp.username = line.substr(0, pos);
+        line.erase(0, pos + 1);
+        
+        pos = line.find("|");
+        emp.password = line.substr(0, pos);
+        line.erase(0, pos + 1);
+        
+        pos = line.find("|");
+        emp.cnic = line.substr(0, pos);
+        line.erase(0, pos + 1);
+        
+        pos = line.find("|");
+        emp.role = line.substr(0, pos);
+        line.erase(0, pos + 1);
+        
+        pos = line.find("|");
+        emp.team = line.substr(0, pos);
+        line.erase(0, pos + 1);
+        
+        emp.department = line;
+        
+        return emp;
+    }
+};
