@@ -10,3 +10,15 @@
 #include <unordered_map>
 #include <unordered_set>
 using namespace std;
+template<typename T>
+class ListNode{
+public:
+    T data;
+    ListNode* next;
+    
+    ListNode(T value) {
+        data = value;      
+        next = NULL;  
+    }
+};
+
