@@ -423,3 +423,269 @@ public:
         }
     }
 };
+
+class EmployeeTreeNode {
+public:
+    string username;
+    string role;
+    EmployeeTreeNode* parent;
+    vector<EmployeeTreeNode*> children;
+
+   EmployeeTreeNode(string uname, string r) {
+        username = uname;
+        role = r;
+        parent = NULL;
+    }
+
+
+    void addChild(EmployeeTreeNode* child) {
+        child->parent = this;
+        children.push_back(child);
+    }
+
+    void display(int level = 0) {
+        string indent(level * 4, ' ');
+        cout << indent << "|-- " << username << " (" << role << ")" << endl;
+        
+        for (auto child : children) {
+            child->display(level + 1);
+        }
+    }
+};
+
+class OrganizationTree {
+    EmployeeTreeNode* root;
+    unordered_map<string, EmployeeTreeNode*> nodeMap;
+
+public:
+    OrganizationTree() {
+        root = NULL;
+    }
+
+
+    ~OrganizationTree() {
+        clearTree(root);
+    }
+
+    void clearTree(EmployeeTreeNode* node) {
+        if (node == NULL) return;
+        
+        for (auto child : node->children) {
+            clearTree(child);
+        }
+        delete node;
+    }
+
+    void buildHierarchy(const vector<pair<string, string>>& employees, 
+                       const vector<pair<string, string>>& relationships) {
+        for (const auto& emp : employees) {
+            EmployeeTreeNode* node = new EmployeeTreeNode(emp.first, emp.second);
+            nodeMap[emp.first] = node;
+            
+            if (emp.second == "admin") {
+                root = node;
+            }
+        }
+
+        for (const auto& rel : relationships) {
+            string parent = rel.first;
+            string child = rel.second;
+            
+            if (nodeMap.find(parent) != nodeMap.end() && 
+                nodeMap.find(child) != nodeMap.end()) {
+                nodeMap[parent]->addChild(nodeMap[child]);
+            }
+        }
+    }
+
+    void displayHierarchy() {
+        if (root == NULL) {
+            cout << "Organization hierarchy not built yet!\n";
+            return;
+        }
+        
+        cout << "\n=== ORGANIZATION HIERARCHY TREE ===\n";
+        cout << "Root: " << root->username << " (" << root->role << ")\n";
+        cout << "-----------------------------------\n";
+        root->display();
+    }
+
+    vector<string> getSubordinates(string username) {
+        vector<string> subordinates;
+        
+        if (nodeMap.find(username) == nodeMap.end()) {
+            return subordinates;
+        }
+        
+        EmployeeTreeNode* node = nodeMap[username];
+        for (auto child : node->children) {
+            subordinates.push_back(child->username);
+        }
+        
+        return subordinates;
+    }
+
+    string getManager(string username) {
+        if (nodeMap.find(username) == nodeMap.end() || 
+            nodeMap[username]->parent == NULL) {
+            return "";
+        }
+        
+        return nodeMap[username]->parent->username;
+    }
+
+    vector<string> getEscalationPath(string username) {
+        vector<string> path;
+        
+        if (nodeMap.find(username) == nodeMap.end()) {
+            return path;
+        }
+        
+        EmployeeTreeNode* current = nodeMap[username];
+        while (current != NULL) {
+            path.push_back(current->username);
+            current = current->parent;
+        }
+        
+        reverse(path.begin(), path.end());
+        return path;
+    }
+};
+
+class CollaborationGraph {
+    unordered_map<string, vector<pair<string, int>>> adjList; 
+    unordered_map<string, string> employeeTeam; 
+
+public:
+    void addEmployee(string username, string team) {
+        employeeTeam[username] = team;
+    }
+
+    void addCollaboration(string emp1, string emp2, int weight = 1) {
+        adjList[emp1].push_back({emp2, weight});
+        adjList[emp2].push_back({emp1, weight});
+    }
+
+    vector<string> findExperts(string incidentType) {
+        vector<string> experts;
+        
+        unordered_map<string, int> collaborationScore;
+        
+        for (const auto& entry : adjList) {
+            string employee = entry.first;
+            collaborationScore[employee] = entry.second.size();
+        }
+        
+        vector<pair<string, int>> sortedExperts(
+            collaborationScore.begin(), collaborationScore.end());
+        
+        sort(sortedExperts.begin(), sortedExperts.end(),
+             [](const pair<string, int>& a, const pair<string, int>& b) {
+                 return a.second > b.second;
+             });
+        
+        for (int i = 0; i < min(5, (int)sortedExperts.size()); i++) {
+            experts.push_back(sortedExperts[i].first);
+        }
+        
+        return experts;
+    }
+
+    vector<string> findTeamCollaborators(string teamName) {
+        vector<string> collaborators;
+        unordered_set<string> visited;
+        
+        for (const auto& entry : employeeTeam) {
+            if (entry.second == teamName) {
+                string employee = entry.first;
+                
+                if (adjList.find(employee) != adjList.end()) {
+                    for (const auto& colleague : adjList[employee]) {
+                        string collabName = colleague.first;
+                        
+                        if (employeeTeam[collabName] != teamName && 
+                            visited.find(collabName) == visited.end()) {
+                            collaborators.push_back(collabName);
+                            visited.insert(collabName);
+                        }
+                    }
+                }
+            }
+        }
+        
+        return collaborators;
+    }
+
+    void displayGraph() {
+        cout << "\n=== TEAM COLLABORATION GRAPH ===\n";
+        
+        for (const auto& entry : adjList) {
+            string employee = entry.first;
+            cout << employee << " (" << employeeTeam[employee] << ") -> ";
+            
+            for (const auto& colleague : entry.second) {
+                cout << colleague.first << "(" << colleague.second << ") ";
+            }
+            cout << endl;
+        }
+    }
+
+    vector<string> findShortestPath(string start, string end) {
+        if (adjList.find(start) == adjList.end() || 
+            adjList.find(end) == adjList.end()) {
+            return {};
+        }
+
+        unordered_map<string, string> parent;
+        unordered_set<string> visited;
+        queue<string> q;
+
+        q.push(start);
+        visited.insert(start);
+        parent[start] = "";
+
+        while (!q.empty()) {
+            string current = q.front();
+            q.pop();
+
+            if (current == end) {
+                vector<string> path;
+                string node = end;
+                
+                while (node != "") {
+                    path.push_back(node);
+                    node = parent[node];
+                }
+                
+                reverse(path.begin(), path.end());
+                return path;
+            }
+
+            for (const auto& neighbor : adjList[current]) {
+                string next = neighbor.first;
+                
+                if (visited.find(next) == visited.end()) {
+                    visited.insert(next);
+                    parent[next] = current;
+                    q.push(next);
+                }
+            }
+        }
+
+        return {}; 
+    }
+};
+
+string toLower(string str) {
+    for (char& c : str) {
+        c = tolower(c);
+    }
+    return str;
+}
+
+string getCurrentTime() {
+    time_t now = time(0);
+    string dt = ctime(&now);
+    dt.pop_back();
+    return dt;
+}
