@@ -947,6 +947,67 @@ public:
         return team;
     }
 };
+class IncidentSystem {
+private:
+    vector<Employee> employees;
+    vector<Team> teams;
+    vector<Incident> incidents;
+    
+    map<string, Employee> employeeMap; 
+    map<string, int> incidentTypeCount;
+    
+    LinkedListQueue<Incident> incidentQueue;
+    LinkedListStack<string> activityLog;
+    LinkedListPriorityQueue priorityQueue;
+    OrganizationTree orgTree;
+    CollaborationGraph collabGraph;
+    const string EMP_FILE = "employees.dat";
+    const string TEAM_FILE = "teams.dat";
+    const string INC_FILE = "incidents.dat";
+
+public:
+    IncidentSystem() {
+        loadData();
+        if (employees.empty()) {
+            createDefaultData();
+        }
+        buildDataStructures();
+    }
+
+    ~IncidentSystem() {
+        saveData();
+    }
+
+    void buildDataStructures() {
+        vector<pair<string, string>> empList;
+        vector<pair<string, string>> relationships;
+        
+        for (const Employee& emp : employees) {
+            empList.push_back({emp.username, emp.role});
+            collabGraph.addEmployee(emp.username, emp.team);
+        }
+        relationships.push_back({"admin", "ali"});
+        relationships.push_back({"ali", "sarah"}); 
+        relationships.push_back({"ali", "john"}); 
+        relationships.push_back({"sarah", "fatima"}); 
+        relationships.push_back({"john", "mike"}); 
+        relationships.push_back({"john", "ahmed"}); 
+        
+        orgTree.buildHierarchy(empList, relationships);
+        for (const Incident& inc : incidents) {
+            string assignedTeam = inc.assignedTeam;
+            for (const Team& team : teams) {
+                if (team.name == assignedTeam) {
+                    for (int i = 0; i < team.members.size(); i++) {
+                        for (int j = i + 1; j < team.members.size(); j++) {
+                            collabGraph.addCollaboration(team.members[i], team.members[j]);
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+    }
 
 
 
