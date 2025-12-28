@@ -846,6 +846,107 @@ public:
         return inc;
     }
 };
+class Team {
+public:
+    string name;
+    string department;
+    string head;
+    vector<string> members;
+    int totalCases;
+    int solvedCases;
+
+    Team() {
+        totalCases = 0;
+        solvedCases = 0;
+    }
+
+    Team(string n, string dept, string h) {
+        name = n;
+        department = dept;
+        head = h;
+        totalCases = 0;
+        solvedCases = 0;
+    }
+
+    void display() {
+        cout << "\n" << string(40, '=') << "\n";
+        cout << "        TEAM DETAILS\n";
+        cout << string(40, '=') << "\n";
+        cout << "|-- Team Name: " << name << "\n";
+        cout << "|-- Department: " << department << "\n";
+        cout << "|-- Team Head: " << head << "\n";
+        cout << "|-- Total Cases Assigned: " << totalCases << "\n";
+        cout << "|-- Solved Cases: " << solvedCases << "\n";
+        if (totalCases > 0) {
+            float successRate = (float)solvedCases * 100 / totalCases;
+            cout << "|-- Success Rate: " << successRate << "%\n";
+        } else {
+            cout << "|-- Success Rate: 0%\n";
+        }
+        
+        cout << "|-- Team Members (" << members.size() << "):\n";
+        if (members.empty()) {
+            cout << "   No members in this team yet.\n";
+        } else {
+            for (int i = 0; i < members.size(); i++) {
+                cout << "   " << i+1 << ". " << members[i] << "\n";
+            }
+        }
+        cout << string(40, '=') << "\n";
+    }
+
+    string toFileString() {
+        string result = name + "|" + department + "|" + head + "|" + 
+                       to_string(totalCases) + "|" + to_string(solvedCases) + "|";
+        for (string member : members) {
+            result += member + ",";
+        }
+        return result;
+    }
+
+    static Team fromFileString(string line) {
+        Team team;
+        int pos = 0;
+        
+        pos = line.find("|");
+        team.name = line.substr(0, pos);
+        line.erase(0, pos + 1);
+        
+        pos = line.find("|");
+        team.department = line.substr(0, pos);
+        line.erase(0, pos + 1);
+        
+        pos = line.find("|");
+        team.head = line.substr(0, pos);
+        line.erase(0, pos + 1);
+        
+        pos = line.find("|");
+        team.totalCases = stoi(line.substr(0, pos));
+        line.erase(0, pos + 1);
+        
+        pos = line.find("|");
+        team.solvedCases = stoi(line.substr(0, pos));
+        line.erase(0, pos + 1);
+        
+        while (!line.empty()) {
+            pos = line.find(",");
+            if (pos != string::npos) {
+                string member = line.substr(0, pos);
+                if (!member.empty()) {
+                    team.members.push_back(member);
+                }
+                line.erase(0, pos + 1);
+            } else {
+                if (!line.empty()) {
+                    team.members.push_back(line);
+                }
+                break;
+            }
+        }
+        
+        return team;
+    }
+};
 
 
 
