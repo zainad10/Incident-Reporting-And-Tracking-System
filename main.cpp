@@ -333,4 +333,93 @@ public:
     }
 };
 
-  
+class PriorityIncident {
+public:
+    int id;
+    string type;
+    int priority;
+
+    PriorityIncident(int i = 0, string t = "", int p = 1) {
+        id = i;
+        type = t;
+        priority = p;
+    }
+
+    bool operator<(const PriorityIncident& other) const {
+        return priority < other.priority; 
+    }
+};
+
+class LinkedListPriorityQueue {
+    ListNode<PriorityIncident>* head;
+
+public:
+    LinkedListPriorityQueue() {
+        head = NULL;
+    }
+
+
+    ~LinkedListPriorityQueue() {
+        while (head != NULL) {
+            ListNode<PriorityIncident>* temp = head;
+            head = head->next;
+            delete temp;
+        }
+    }
+
+    void push(PriorityIncident incident) {
+        ListNode<PriorityIncident>* newNode = new ListNode<PriorityIncident>(incident);
+        
+        if (head == NULL || incident.priority > head->data.priority) {
+            newNode->next = head;
+            head = newNode;
+        } else {
+            ListNode<PriorityIncident>* current = head;
+            
+            while (current->next != NULL && 
+                   current->next->data.priority >= incident.priority) {
+                current = current->next;
+            }
+            
+            newNode->next = current->next;
+            current->next = newNode;
+        }
+    }
+
+    PriorityIncident pop() {
+        if (head == NULL) {
+            return PriorityIncident();
+        }
+        
+        ListNode<PriorityIncident>* temp = head;
+        PriorityIncident item = head->data;
+        head = head->next;
+        delete temp;
+        
+        return item;
+    }
+
+    bool isEmpty() {
+        return head == NULL;
+    }
+
+    void display() {
+        cout << "\n=== PRIORITY QUEUE (Linked List) ===\n";
+        cout << "(Highest priority first)\n";
+        
+        if (head == NULL) {
+            cout << "Queue is empty!\n";
+            return;
+        }
+        
+        ListNode<PriorityIncident>* current = head;
+        int index = 1;
+        
+        while (current != NULL) {
+            cout << index++ << ". ID: " << current->data.id 
+                 << " | Type: " << current->data.type 
+                 << " | Priority: " << current->data.priority << endl;
+            current = current->next;
+        }
+    }
+};
