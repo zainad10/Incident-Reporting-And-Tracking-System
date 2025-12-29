@@ -1183,41 +1183,315 @@ void normalUserMenu() {
         }
     }
 
+    void reportIncident() {
+        string name, cnic, location, type;
+        
+        cout << "\n" << string(40, '=') << "\n";
+        cout << "      REPORT NEW INCIDENT\n";
+        cout << string(40, '=') << "\n";
+        cout << "Enter Reporter Name: ";
+        getline(cin, name);
+        
+        cout << "Enter Your CNIC: ";
+        getline(cin, cnic);
+        
+        cout << "Enter Location: ";
+        getline(cin, location);
+        
+        cout << "\nSELECT INCIDENT TYPE\n";
+        cout << "   1. Hardware Failure\n";
+        cout << "   2. Software Bug\n";
+        cout << "   3. Network Issue\n";
+        cout << "   4. Security Issue\n";
+        cout << "   5. Other\n";
+        cout << "Choice: ";
+        
+        int typeChoice;
+        cin >> typeChoice;
+        cin.ignore();
+        
+        switch(typeChoice) {
+            case 1: type = "Hardware Failure"; break;
+            case 2: type = "Software Bug"; break;
+            case 3: type = "Network Issue"; break;
+            case 4: type = "Security Issue"; break;
+            default: type = "Other"; break;
+        }
+        
+        string assignedTeam = "IT Support";
+        string reporterRole = "Normal User";
+        
+        for (Employee emp : employees) {
+            if (toLower(emp.cnic) == toLower(cnic)) {
+                reporterRole = emp.role;
+                assignedTeam = emp.team;
+                cout << "\n Welcome " << emp.username << "!\n";
+                cout << "  Role: " << reporterRole << "\n";
+                cout << "  Team: " << assignedTeam << "\n";
+                break;
+            }
+        }
+        
+        Incident incident(name, cnic, location, type, assignedTeam);
+        incident.reporterRole = reporterRole;
+        
+        incidents.push_back(incident);
+        incidentQueue.enqueue(incident);
+        
+        int priority = calculatePriority(type);
+        priorityQueue.push(PriorityIncident(incident.id, type, priority));
+        
+        incidentTypeCount[type]++;
+        
+        bool teamFound = false;
+        for (Team& team : teams) {
+            if (team.name == assignedTeam) {
+                team.totalCases++;
+                teamFound = true;
+                break;
+            }
+        }
+        
+        if (!teamFound) {
+            cout << "Warning: Team '" << assignedTeam << "' not found!\n";
+        }
+        
+        logActivity("New incident reported by " + cnic + ": " + name);
+        cout << "\n Incident reported successfully!\n";
+        cout << "  Incident ID: " << incident.id << "\n";
+        cout << "  Assigned Team: " << assignedTeam << "\n";
+    }
 
+    int calculatePriority(string type) {
+        return min(10, incidentTypeCount[type] + 1);
+    }
 
+    Employee* login() {
+        string username, password;
+        
+        cout << "\n" << string(40, '=') << "\n";
+        cout << "      EMPLOYEE LOGIN\n";
+        cout << string(40, '=') << "\n";
+        cout << "Username: ";
+        getline(cin, username);
+        
+        cout << "Password: ";
+        getline(cin, password);
+        
+        username = toLower(username);
+        
+        if (employeeMap.find(username) != employeeMap.end()) {
+            Employee& emp = employeeMap[username];
+            if (emp.password == password) {
+                logActivity("User logged in: " + username);
+                return &emp;
+            }
+        }
+        
+        cout << "\n Invalid credentials!\n";
+        return NULL;
+    }
 
+    void adminMenu(Employee* admin) {
+        int choice;
+        
+        do {
+            cout << "\n" << string(40, '=') << "\n";
+            cout << "        ADMIN MENU\n";
+            cout << string(40, '=') << "\n";
+            cout << "Welcome, " << admin->username << "\n";
+            cout << string(40, '-') << "\n";
+            cout << "1. Update Incident Status\n";
+            cout << "2. Generate Reports\n";
+            cout << "3. Add Employee\n";
+            cout << "4. View All Employees\n";
+            cout << "5. View All Teams\n";
+            cout << "6. View Activity Log\n";
+            cout << "7. Check Escalations\n";
+            cout << "8. View Incident Queue\n";
+            cout << "9. View Organization Hierarchy (Tree)\n";
+            cout << "10. View Team Collaboration (Graph)\n";
+            cout << "0. Logout\n";
+            cout << "Choice: ";
+            cin >> choice;
+            cin.ignore();
+            
+            switch(choice) {
+                case 1: updateStatus(); break;
+                case 2: generateReports(); break;
+                case 3: addEmployee(); break;
+                case 4: viewEmployees(); break;
+                case 5: viewAllTeams("All"); break;
+                case 6: viewActivityLog(); break;
+                case 7: checkEscalations(); break;
+                case 8: viewIncidentQueue(); break;
+                case 9: viewOrganizationHierarchy(); break;
+                case 10: viewTeamCollaboration(); break;
+                case 0: cout << "Logging out...\n"; break;
+                default: cout << "Invalid choice!\n";
+            }
+        } while(choice != 0);
+    }
 
+    void updateStatus() {
+        cout << "\n" << string(40, '=') << "\n";
+        cout << "   UPDATE INCIDENT STATUS\n";
+        cout << string(40, '=') << "\n";
+        
+        if (incidents.empty()) {
+            cout << "No incidents to update!\n";
+            return;
+        }
+        
+        cout << "Recent Incidents:\n";
+        int count = 0;
+        for (int i = incidents.size() - 1; i >= 0 && count < 5; i--, count++) {
+            cout << "ID: " << incidents[i].id << " | Type: " << incidents[i].type 
+                 << " | Status: " << incidents[i].status << endl;
+        }
+        
+        cout << "\nEnter Incident ID to update: ";
+        int id;
+        cin >> id;
+        cin.ignore();
+                
+        bool found = false;
+        for (Incident& inc : incidents) {
+            if (inc.id == id) {
+                found = true;
+                cout << "\nCurrent Details:\n";
+                cout << "|-- Report Name: " << inc.reportName << "\n";
+                cout << "|-- Type: " << inc.type << "\n";
+                cout << "|-- Current Status: " << inc.status << "\n";
+                cout << "|-- Assigned Team: " << inc.assignedTeam << "\n";
+                
+                cout << "\nNew Status (Pending/In Progress/Solved): ";
+                string newStatus;
+                getline(cin, newStatus);
+                
+                inc.status = newStatus;
+                
+                if (newStatus == "Solved") {
+                    for (Team& team : teams) {
+                        if (team.name == inc.assignedTeam) {
+                            team.solvedCases++;
+                            break;
+                        }
+                    }
+                    cout << " Incident marked as solved!\n";
+                } else {
+                    cout << " Status updated!\n";
+                }
+                
+                logActivity("Incident " + to_string(id) + " status updated to " + newStatus);
+                break;
+            }
+        }
+        
+        if (!found) {
+            cout << " Incident not found!\n";
+        }
+    }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    void generateReports() {
+        cout << "\n" << string(40, '=') << "\n";
+        cout << "   INCIDENT STATISTICS REPORT\n";
+        cout << string(40, '=') << "\n";
+        
+        if (incidents.empty()) {
+            cout << "No incidents to report!\n";
+            return;
+        }
+        
+        map<string, int> typeCount;
+        for (Incident inc : incidents) {
+            typeCount[inc.type]++;
+        }
+        
+        int total = incidents.size();
+        
+        cout << "\nIncident Type Distribution:\n";
+        cout << string(50, '-') << "\n";
+        cout << "Type\t\t\tCount\tPercentage\n";
+        cout << string(50, '-') << "\n";
+        
+        for (auto& pair : typeCount) {
+            string type = pair.first;
+            int count = pair.second;
+            float percentage = (float)count * 100 / total;
+            
+            cout << type;
+            if (type.length() < 16) cout << "\t";
+            cout << "\t" << count << "\t" << percentage << "%\n";
+        }
+        
+        cout << string(50, '-') << "\n";
+        cout << "Total Incidents: " << total << "\n";
+        
+        cout << "\nTeam Performance:\n";
+        for (Team team : teams) {
+            if (team.totalCases > 0) {
+                cout << team.name << ": " << team.solvedCases << "/" 
+                     << team.totalCases << " solved (" 
+                     << (float)team.solvedCases * 100 / team.totalCases << "%)\n";
+            }
+        }
+    }
+    void addEmployee() {
+        string username, password, cnic, role, team, dept;
+        
+        cout << "\n" << string(40, '=') << "\n";
+        cout << "      ADD NEW EMPLOYEE\n";
+        cout << string(40, '=') << "\n";
+        cout << "Username: ";
+        getline(cin, username);
+        
+        if (employeeMap.find(username) != employeeMap.end()) {
+            cout << " Username already exists!\n";
+            return;
+        }
+        
+        cout << "Password: ";
+        getline(cin, password);
+        
+        cout << "CNIC: ";
+        getline(cin, cnic);
+        
+        cout << "Role (admin/team_head/team_member/dept_head): ";
+        getline(cin, role);
+        
+        cout << "Department: ";
+        getline(cin, dept);
+        
+        cout << "\nAvailable Teams:\n";
+        for (int i = 0; i < teams.size(); i++) {
+            cout << i+1 << ". " << teams[i].name << " (" << teams[i].department << ")\n";
+        }
+        
+        cout << "Select Team (enter number): ";
+        int teamChoice;
+        cin >> teamChoice;
+        cin.ignore();
+        
+        if (teamChoice < 1 || teamChoice > teams.size()) {
+            cout << " Invalid team selection!\n";
+            return;
+        }
+        
+        team = teams[teamChoice-1].name;
+        dept = teams[teamChoice-1].department;
+        
+        Employee newEmp(username, password, cnic, role, team, dept);
+        employees.push_back(newEmp);
+        employeeMap[username] = newEmp;
+        
+        teams[teamChoice-1].members.push_back(username);
+        
+        logActivity("New employee added: " + username);
+        cout << "\n Employee added successfully!\n";
+        cout << "  Username: " << username << "\n";
+        cout << "  Team: " << team << "\n";
+        cout << "  Department: " << dept << "\n";
+        
+        buildDataStructures();
+    }
