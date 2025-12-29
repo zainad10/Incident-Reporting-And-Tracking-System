@@ -1593,7 +1593,242 @@ void normalUserMenu() {
             cout << "No incidents need escalation at this time.\n";
         }
     }
+  void viewOrganizationHierarchy() {
+        orgTree.displayHierarchy();
+        
+        cout << "\nTree Functions:\n";
+        cout << "1. View Manager of Employee\n";
+        cout << "2. View Subordinates of Employee\n";
+        cout << "3. View Escalation Path\n";
+        cout << "Choice: ";
+        
+        int choice;
+        cin >> choice;
+        cin.ignore();
+        
+        if (choice == 1) {
+            cout << "Enter employee username: ";
+            string username;
+            getline(cin, username);
+            
+            string manager = orgTree.getManager(username);
+            if (manager.empty()) {
+                cout << "No manager found or employee is admin.\n";
+            } else {
+                cout << "Manager of " << username << " is: " << manager << endl;
+            }
+        }
+        else if (choice == 2) {
+            cout << "Enter employee username: ";
+            string username;
+            getline(cin, username);
+            
+            vector<string> subordinates = orgTree.getSubordinates(username);
+            if (subordinates.empty()) {
+                cout << "No subordinates found.\n";
+            } else {
+                cout << "Subordinates of " << username << ":\n";
+                for (const string& sub : subordinates) {
+                    cout << "- " << sub << endl;
+                }
+            }
+        }
+        else if (choice == 3) {
+            cout << "Enter employee username: ";
+            string username;
+            getline(cin, username);
+            
+            vector<string> path = orgTree.getEscalationPath(username);
+            if (path.empty()) {
+                cout << "No escalation path found.\n";
+            } else {
+                cout << "Escalation path for " << username << ":\n";
+                for (size_t i = 0; i < path.size(); i++) {
+                    cout << i+1 << ". " << path[i] << endl;
+                }
+            }
+        }
+    }
 
+    void viewTeamCollaboration() {
+        collabGraph.displayGraph();
+        
+        cout << "\nGraph Functions:\n";
+        cout << "1. Find Experts for Incident Type\n";
+        cout << "2. Find Team Collaborators\n";
+        cout << "3. Find Shortest Path Between Employees\n";
+        cout << "Choice: ";
+        
+        int choice;
+        cin >> choice;
+        cin.ignore();
+        
+        if (choice == 1) {
+            cout << "Enter incident type: ";
+            string incidentType;
+            getline(cin, incidentType);
+            
+            vector<string> experts = collabGraph.findExperts(incidentType);
+            if (experts.empty()) {
+                cout << "No experts found.\n";
+            } else {
+                cout << "Top experts for " << incidentType << ":\n";
+                for (size_t i = 0; i < experts.size(); i++) {
+                    cout << i+1 << ". " << experts[i] << endl;
+                }
+            }
+        }
+        else if (choice == 2) {
+            cout << "Enter team name: ";
+            string teamName;
+            getline(cin, teamName);
+            
+            vector<string> collaborators = collabGraph.findTeamCollaborators(teamName);
+            if (collaborators.empty()) {
+                cout << "No external collaborators found for team " << teamName << ".\n";
+            } else {
+                cout << "Collaborators for team " << teamName << ":\n";
+                for (const string& collab : collaborators) {
+                    cout << "- " << collab << endl;
+                }
+            }
+        }
+        else if (choice == 3) {
+            cout << "Enter first employee username: ";
+            string emp1;
+            getline(cin, emp1);
+            
+            cout << "Enter second employee username: ";
+            string emp2;
+            getline(cin, emp2);
+            
+            vector<string> path = collabGraph.findShortestPath(emp1, emp2);
+            if (path.empty()) {
+                cout << "No path found between " << emp1 << " and " << emp2 << ".\n";
+            } else {
+                cout << "Shortest path between " << emp1 << " and " << emp2 << ":\n";
+                for (size_t i = 0; i < path.size(); i++) {
+                    cout << i+1 << ". " << path[i] << endl;
+                }
+                cout << "Path length: " << path.size()-1 << " connections\n";
+            }
+        }
+    }
+
+    void teamMenu(Employee* emp) {
+        int choice;
+        
+        do {
+            cout << "\n" << string(40, '=') << "\n";
+            cout << "        TEAM MENU\n";
+            cout << string(40, '=') << "\n";
+            cout << "Welcome, " << emp->username << " (" << emp->role << ")\n";
+            cout << "Team: " << emp->team << " | Department: " << emp->department << "\n";
+            cout << string(40, '-') << "\n";
+            cout << "1. View Assigned Cases\n";
+            cout << "2. View Solved Cases\n";
+            cout << "3. View Team Details\n";
+            
+            if (emp->role == "team_head") {
+                cout << "4. Change Incident Status (Team Head Only)\n";
+                cout << "5. View Team Members\n";
+                cout << "6. View Team Collaboration Network\n";
+            }
+            
+            if (emp->role == "dept_head") {
+                cout << "7. Department Head Functions\n";
+                cout << "8. View Organization Hierarchy\n";
+            }
+            
+            cout << "0. Logout\n";
+            cout << "Choice: ";
+            cin >> choice;
+            cin.ignore();
+            
+            switch(choice) {
+                case 1: viewAssignedCases(emp->team); break;
+                case 2: viewSolvedCases(emp->team); break;
+                case 3: viewTeamDetails(emp->team); break;
+                case 4: 
+                    if (emp->role == "team_head") updateStatus(); 
+                    else cout << " Access denied! Team head only.\n";
+                    break;
+                case 5: 
+                    if (emp->role == "team_head") viewTeamMembers(emp->team); 
+                    else cout << " Access denied! Team head only.\n";
+                    break;
+                case 6:
+                    if (emp->role == "team_head") {
+                        cout << "\nTeam Collaboration Network for " << emp->team << ":\n";
+                        vector<string> collaborators = collabGraph.findTeamCollaborators(emp->team);
+                        if (collaborators.empty()) {
+                            cout << "No external collaborators found.\n";
+                        } else {
+                            for (const string& collab : collaborators) {
+                                cout << "- " << collab << endl;
+                            }
+                        }
+                    }
+                    else cout << " Access denied! Team head only.\n";
+                    break;
+                case 7: 
+                    if (emp->role == "dept_head") deptHeadMenu(emp); 
+                    else cout << " Access denied! Department head only.\n";
+                    break;
+                case 8:
+                    if (emp->role == "dept_head") orgTree.displayHierarchy();
+                    else cout << " Access denied! Department head only.\n";
+                    break;
+                case 0: cout << "Logging out...\n"; break;
+                default: cout << "Invalid choice!\n";
+            }
+        } while(choice != 0);
+    }
+
+    void viewAssignedCases(string team) {
+        cout << "\n" << string(40, '=') << "\n";
+        cout << "  ASSIGNED CASES FOR " << team << "\n";
+        cout << string(40, '=') << "\n";
+        
+        bool found = false;
+        for (Incident inc : incidents) {
+            if (inc.assignedTeam == team && inc.status != "Solved") {
+                cout << "\n--- Case " << inc.id << " ---\n";
+                cout << "|-- Type: " << inc.type << "\n";
+                cout << "|-- Reporter: " << inc.reporterCNIC << "\n";
+                cout << "|-- Location: " << inc.location << "\n";
+                cout << "|-- Status: " << inc.status << "\n";
+                cout << "|-- Report Time: " << inc.reportTime << "\n";
+                found = true;
+            }
+        }
+        
+        if (!found) {
+            cout << "No assigned cases found!\n";
+        }
+    }
+
+    void viewSolvedCases(string team) {
+        cout << "\n" << string(40, '=') << "\n";
+        cout << "   SOLVED CASES FOR " << team << "\n";
+        cout << string(40, '=') << "\n";
+        
+        bool found = false;
+        for (Incident inc : incidents) {
+            if (inc.assignedTeam == team && inc.status == "Solved") {
+                cout << "\n--- Case " << inc.id << " ---\n";
+                cout << "|-- Type: " << inc.type << "\n";
+                cout << "|-- Reporter: " << inc.reporterCNIC << "\n";
+                cout << "|-- Location: " << inc.location << "\n";
+                cout << "|-- Report Time: " << inc.reportTime << "\n";
+                found = true;
+            }
+        }
+        
+        if (!found) {
+            cout << "No solved cases found!\n";
+        }
+    }
     
     
     
