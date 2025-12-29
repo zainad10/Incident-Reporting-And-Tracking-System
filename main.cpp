@@ -1527,6 +1527,73 @@ void normalUserMenu() {
             team.display();
         }
     }
+     void viewActivityLog() {
+        cout << "\n" << string(40, '=') << "\n";
+        cout << "     RECENT ACTIVITIES\n";
+        cout << string(40, '=') << "\n";
+        
+        LinkedListStack<string> tempStack;
+        int count = 0;
+        
+        while (!activityLog.isEmpty() && count < 10) {
+            string activity = activityLog.pop();
+            cout << activity << endl;
+            tempStack.push(activity);
+            count++;
+        }
+        
+        while (!tempStack.isEmpty()) {
+            activityLog.push(tempStack.pop());
+        }
+        
+        if (count == 0) {
+            cout << "No activities logged yet!\n";
+        }
+    }
+
+    void viewIncidentQueue() {
+        cout << "\n" << string(40, '=') << "\n";
+        cout << "   INCIDENT QUEUE STATUS\n";
+        cout << string(40, '=') << "\n";
+        cout << "Total incidents in queue: " << incidentQueue.getSize() << "\n";
+        
+        cout << "\nPending Incidents:\n";
+        int pendingCount = 0;
+        for (Incident inc : incidents) {
+            if (inc.status == "Pending") {
+                cout << "ID: " << inc.id << " | Type: " << inc.type 
+                     << " | Team: " << inc.assignedTeam << endl;
+                pendingCount++;
+            }
+        }
+        
+        if (pendingCount == 0) {
+            cout << "No pending incidents.\n";
+        }
+    }
+
+    void checkEscalations() {
+        cout << "\n" << string(40, '=') << "\n";
+        cout << "      ESCALATION CHECK\n";
+        cout << string(40, '=') << "\n";
+        
+        bool escalated = false;
+        for (Incident& inc : incidents) {
+            if (inc.status == "Pending" && inc.assignedTeam == "IT Support") {
+                inc.assignedTeam = "Operations";
+                inc.status = "Escalated";
+                escalated = true;
+                
+                cout << " Incident " << inc.id << " escalated from IT Support to Operations\n";
+                logActivity("Incident " + to_string(inc.id) + " escalated to Operations");
+            }
+        }
+        
+        if (!escalated) {
+            cout << "No incidents need escalation at this time.\n";
+        }
+    }
+
     
     
     
