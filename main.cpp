@@ -1150,7 +1150,38 @@ public:
             incFile.close();
         }
     }
-
+void normalUserMenu() {
+        int choice;
+        
+        while(true) {
+            cout << "\n" << string(40, '=') << "\n";
+            cout << "      NORMAL USER MENU\n";
+            cout << string(40, '=') << "\n";
+            cout << "1. Report Incident\n";
+            cout << "2. Back to Main Menu\n";
+            cout << "Choice: ";
+            cin >> choice;
+            cin.ignore();
+            
+            if (choice == 1) {
+                reportIncident();
+                
+                cout << "\nDo you want to see the full form? (1 for Yes, 0 for No): ";
+                cin >> choice;
+                cin.ignore();
+                
+                if (choice == 1 && !incidents.empty()) {
+                    incidents.back().displayForm();
+                }
+            }
+            else if (choice == 2) {
+                break;
+            }
+            else {
+                cout << "Invalid choice!\n";
+            }
+        }
+    }
 
 
 
