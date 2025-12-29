@@ -1495,3 +1495,70 @@ void normalUserMenu() {
         
         buildDataStructures();
     }
+     void viewEmployees() {
+        cout << "\n" << string(40, '=') << "\n";
+        cout << "      ALL EMPLOYEES\n";
+        cout << string(40, '=') << "\n";
+        cout << "Total Employees: " << employees.size() << "\n";
+        cout << string(40, '-') << "\n";
+        
+        if (employees.empty()) {
+            cout << "No employees found!\n";
+            return;
+        }
+        
+        for (Employee emp : employees) {
+            emp.display();
+        }
+    }
+
+    void viewAllTeams(string dept) {
+        cout << "\n" << string(40, '=') << "\n";
+        cout << "        ALL TEAMS\n";
+        cout << string(40, '=') << "\n";
+        cout << "Total Teams: " << teams.size() << "\n";
+        
+        if (teams.empty()) {
+            cout << "No teams found!\n";
+            return;
+        }
+        
+        for (Team team : teams) {
+            team.display();
+        }
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
