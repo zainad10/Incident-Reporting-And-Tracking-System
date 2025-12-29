@@ -1829,38 +1829,419 @@ void normalUserMenu() {
             cout << "No solved cases found!\n";
         }
     }
+    void viewTeamDetails(string teamName) {
+        cout << "--------VIEWING TEAM DETAILS---------\n";
+        
+        bool found = false;
+        for (Team team : teams) {
+            if (team.name == teamName) {
+                team.display();
+                found = true;
+                break;
+            }
+        }
+        
+        if (!found) {
+            cout << " Team '" << teamName << "' not found!\n";
+            cout << "Available teams:\n";
+            for (Team t : teams) {
+                cout << "- " << t.name << "\n";
+            }
+        }
+    }
+
+    void viewTeamMembers(string teamName) {
+        cout << "\n" << string(40, '=') << "\n";
+        cout << "  TEAM MEMBERS OF " << teamName << "\n";
+        cout << string(40, '=') << "\n";
+        
+        for (Team team : teams) {
+            if (team.name == teamName) {
+                if (team.members.empty()) {
+                    cout << "No members in this team.\n";
+                } else {
+                    cout << "Total Members: " << team.members.size() << "\n";
+                    cout << string(40, '-') << "\n";
+                    for (int i = 0; i < team.members.size(); i++) {
+                        cout << i+1 << ". " << team.members[i] << "\n";
+                        
+                        if (employeeMap.find(team.members[i]) != employeeMap.end()) {
+                            Employee emp = employeeMap[team.members[i]];
+                            cout << "   Role: " << emp.role << ", CNIC: " << emp.cnic << "\n";
+                        }
+                    }
+                }
+                return;
+            }
+        }
+        cout << " Team not found!\n";
+    }
+
+    void deptHeadMenu(Employee* deptHead) {
+        int choice;
+        
+        do {
+            cout << "\n" << string(40, '=') << "\n";
+            cout << "  DEPARTMENT HEAD MENU\n";
+            cout << string(40, '=') << "\n";
+            cout << "Department: " << deptHead->department << "\n";
+            cout << string(40, '-') << "\n";
+            cout << "1. View All Teams in Department\n";
+            cout << "2. View All Cases in Department\n";
+            cout << "3. Add Team Member\n";
+            cout << "4. Remove Team Member\n";
+            cout << "5. View Department Collaboration Graph\n";
+            cout << "0. Back to Team Menu\n";
+            cout << "Choice: ";
+            cin >> choice;
+            cin.ignore();
+            
+            switch(choice) {
+                case 1: viewDeptTeams(deptHead->department); break;
+                case 2: viewDeptCases(deptHead->department); break;
+                case 3: addTeamMember(deptHead->department); break;
+                case 4: removeTeamMember(deptHead->department); break;
+                case 5: viewDeptCollaboration(deptHead->department); break;
+                case 0: break;
+                default: cout << "Invalid choice!\n";
+            }
+        } while(choice != 0);
+    }
+
+    void viewDeptTeams(string dept) {
+        cout << "\n" << string(40, '=') << "\n";
+        cout << "  TEAMS IN " << dept << " DEPARTMENT\n";
+        cout << string(40, '=') << "\n";
+        
+        bool found = false;
+        for (Team team : teams) {
+            if (team.department == dept) {
+                team.display();
+                found = true;
+            }
+        }
+        
+        if (!found) {
+            cout << "No teams found in this department!\n";
+        }
+    }
+
+    void viewDeptCases(string dept) {
+        cout << "\n" << string(40, '=') << "\n";
+        cout << "  CASES IN " << dept << " DEPARTMENT\n";
+        cout << string(40, '=') << "\n";
+        
+        vector<string> deptTeams;
+        for (Team team : teams) {
+            if (team.department == dept) {
+                deptTeams.push_back(team.name);
+            }
+        }
+        
+        if (deptTeams.empty()) {
+            cout << "No teams in this department!\n";
+            return;
+        }
+        
+        bool found = false;
+        for (Incident inc : incidents) {
+            for (string teamName : deptTeams) {
+                if (inc.assignedTeam == teamName) {
+                    cout << "\n--- Case " << inc.id << " ---\n";
+                    cout << "|-- Team: " << inc.assignedTeam << "\n";
+                    cout << "|-- Type: " << inc.type << "\n";
+                    cout << "|-- Status: " << inc.status << "\n";
+                    cout << "|-- Reporter: " << inc.reporterCNIC << "\n";
+                    found = true;
+                    break;
+                }
+            }
+        }
+        
+        if (!found) {
+            cout << "No cases found in this department!\n";
+        }
+    }
+
+    void viewDeptCollaboration(string dept) {
+        cout << "\n" << string(40, '=') << "\n";
+        cout << "  COLLABORATION IN " << dept << " DEPARTMENT\n";
+        cout << string(40, '=') << "\n";
+        
+        for (const Employee& emp : employees) {
+            if (emp.department == dept) {
+                cout << "\n" << emp.username << " (" << emp.role << "):\n";
+                
+                vector<string> path = collabGraph.findShortestPath(emp.username, "admin");
+                if (!path.empty()) {
+                    cout << "Path to admin: ";
+                    for (size_t i = 0; i < path.size(); i++) {
+                        cout << path[i];
+                        if (i < path.size() - 1) cout << " → ";
+                    }
+                    cout << endl;
+                }
+            }
+        }
+    }
+
+    void addTeamMember(string dept) {
+        cout << "\n" << string(40, '=') << "\n";
+        cout << "      ADD TEAM MEMBER\n";
+        cout << string(40, '=') << "\n";
+        
+        cout << "Teams in " << dept << " department:\n";
+        vector<string> deptTeamNames;
+        int index = 1;
+        for (Team team : teams) {
+            if (team.department == dept) {
+                cout << index << ". " << team.name << "\n";
+                deptTeamNames.push_back(team.name);
+                index++;
+            }
+        }
+        
+        if (deptTeamNames.empty()) {
+            cout << "No teams in this department!\n";
+            return;
+        }
+        
+        cout << "\nSelect team (enter number): ";
+        int teamChoice;
+        cin >> teamChoice;
+        cin.ignore();
+        
+        if (teamChoice < 1 || teamChoice > deptTeamNames.size()) {
+            cout << " Invalid selection!\n";
+            return;
+        }
+        
+        string selectedTeam = deptTeamNames[teamChoice-1];
+        
+        cout << "\nAvailable Employees:\n";
+        vector<string> availableEmps;
+        index = 1;
+        for (Employee emp : employees) {
+            if (emp.department == dept && emp.team != selectedTeam) {
+                cout << index << ". " << emp.username << " (currently in " << emp.team << ")\n";
+                availableEmps.push_back(emp.username);
+                index++;
+            }
+        }
+        
+        if (availableEmps.empty()) {
+            cout << "No available employees to add!\n";
+            return;
+        }
+        
+        cout << "\nSelect employee to add (enter number): ";
+        int empChoice;
+        cin >> empChoice;
+        cin.ignore();
+        
+        if (empChoice < 1 || empChoice > availableEmps.size()) {
+            cout << " Invalid selection!\n";
+            return;
+        }
+        
+        string selectedEmp = availableEmps[empChoice-1];
+        
+        for (Team& team : teams) {
+            if (team.name == selectedTeam) {
+                team.members.push_back(selectedEmp);
+                
+                for (Employee& emp : employees) {
+                    if (emp.username == selectedEmp) {
+                        emp.team = selectedTeam;
+                        employeeMap[selectedEmp].team = selectedTeam;
+                        break;
+                    }
+                }
+                
+                cout << "\n " << selectedEmp << " added to " << selectedTeam << " team!\n";
+                logActivity(selectedEmp + " added to team " + selectedTeam);
+            
+                collabGraph.addEmployee(selectedEmp, selectedTeam);
+                for (const string& member : team.members) {
+                    if (member != selectedEmp) {
+                        collabGraph.addCollaboration(selectedEmp, member);
+                    }
+                }
+                
+                return;
+            }
+        }
+        
+        cout << " Team not found!\n";
+    }
+
+    void removeTeamMember(string dept) {
+        cout << "\n" << string(40, '=') << "\n";
+        cout << "    REMOVE TEAM MEMBER\n";
+        cout << string(40, '=') << "\n";
+        
+        cout << "Teams in " << dept << " department:\n";
+        vector<string> deptTeamNames;
+        int index = 1;
+        for (Team team : teams) {
+            if (team.department == dept) {
+                cout << index << ". " << team.name << "\n";
+                deptTeamNames.push_back(team.name);
+                index++;
+            }
+        }
+        
+        if (deptTeamNames.empty()) {
+            cout << "No teams in this department!\n";
+            return;
+        }
+        
+        cout << "\nSelect team (enter number): ";
+        int teamChoice;
+        cin >> teamChoice;
+        cin.ignore();
+        
+        if (teamChoice < 1 || teamChoice > deptTeamNames.size()) {
+            cout << " Invalid selection!\n";
+            return;
+        }
+        
+        string selectedTeam = deptTeamNames[teamChoice-1];
+        
+        Team* targetTeam = nullptr;
+        for (Team& team : teams) {
+            if (team.name == selectedTeam) {
+                targetTeam = &team;
+                break;
+            }
+        }
+        
+        if (!targetTeam || targetTeam->members.empty()) {
+            cout << "No members in this team!\n";
+            return;
+        }
+        
+        cout << "\nMembers in " << selectedTeam << ":\n";
+        for (int i = 0; i < targetTeam->members.size(); i++) {
+            cout << i+1 << ". " << targetTeam->members[i] << "\n";
+        }
+        
+        cout << "\nSelect member to remove (enter number): ";
+        int memChoice;
+        cin >> memChoice;
+        cin.ignore();
+        
+        if (memChoice < 1 || memChoice > targetTeam->members.size()) {
+            cout << " Invalid selection!\n";
+            return;
+        }
+        
+        string memberToRemove = targetTeam->members[memChoice-1];
+        
+        targetTeam->members.erase(targetTeam->members.begin() + memChoice - 1);
+        
+        for (Employee& emp : employees) {
+            if (emp.username == memberToRemove) {
+                emp.team = "Unassigned";
+                employeeMap[memberToRemove].team = "Unassigned";
+                break;
+            }
+        }
     
+        cout << "\n " << memberToRemove << " removed from " << selectedTeam << " team!\n";
+        logActivity(memberToRemove + " removed from team " + selectedTeam);
+    }
+
+    void run() {
+        int choice;
+        
+        while(true) {
+            cout << "\n" << string(50, '=') << "\n";
+            cout << "       INCIDENT MANAGEMENT SYSTEM\n";
+            cout << string(50, '=') << "\n";
+            cout << "1. Report Incident\n";
+            cout << "2. Employee Login\n";
+            cout << "3. View Priority Queue\n";
+            cout << "4. View System Status\n";
+            cout << "5. Exit System\n";  
+            cout << string(50, '-') << "\n";
+            cout << "Choice: ";
+            
+            cin >> choice;
+            cin.ignore();
+            
+            switch(choice) {
+                case 1: 
+                    normalUserMenu(); 
+                    break;
+                case 2: {
+                    Employee* loggedIn = login();
+                    if (loggedIn) {
+                        if (loggedIn->role == "admin") {
+                            adminMenu(loggedIn);
+                        } else {
+                            teamMenu(loggedIn);
+                        }
+                    }
+                    break;
+                }
+                case 3:
+                    priorityQueue.display();
+                    break;
+                case 4:
+                    showSystemStatus();
+                    break;
+                case 5: 
+                    cout << "\nSaving data...\n";
+                    cout << "Thank you for using the Incident Management System!\n";
+                    saveData();
+                    return;
+                default:
+                    cout << "Invalid choice! Please try again.\n";
+            }
+        }
+    }
+
+    void showSystemStatus() {
+        cout << "\n" << string(50, '=') << "\n";
+        cout << "          SYSTEM STATUS\n";
+        cout << string(50, '=') << "\n";
+        cout << "|-- Total Employees: " << employees.size() << "\n";
+        cout << "|-- Total Teams: " << teams.size() << "\n";
+        cout << "|-- Total Incidents: " << incidents.size() << "\n";
+        cout << "|-- Incident Queue Size: " << incidentQueue.getSize() << "\n";
+        cout << "|-- Activity Log Size: " << activityLog.getSize() << "\n";
+        cout << "|-- Priority Queue Size: " << (priorityQueue.isEmpty() ? 0 : "Non-empty") << "\n";
+        
+        cout << "\nTeams Overview:\n";
+        for (Team team : teams) {
+            cout << "|-- " << team.name << ":\n";
+            cout << "|  |-- Department: " << team.department << "\n";
+            cout << "|  |-- Members: " << team.members.size() << "\n";
+            cout << "|  |-- Cases: " << team.totalCases << " (Solved: " << team.solvedCases << ")\n";
+        }
+        
+        cout << "\nRecent Incidents:\n";
+        int count = 0;
+        for (int i = incidents.size() - 1; i >= 0 && count < 5; i--, count++) {
+            cout << "ID: " << incidents[i].id << " | Type: " << incidents[i].type 
+                 << " | Status: " << incidents[i].status 
+                 << " | Team: " << incidents[i].assignedTeam << endl;
+        }
+        
+        if (incidents.empty()) {
+            cout << "No incidents reported yet.\n";
+        }
+    }
+};
+
+int main() {
+    cout<<"\n"<<string(60, '*')<<"\n";
+    cout<< "    WELCOME TO INCIDENT MANAGEMENT SYSTEM\n";
+    cout<<string(60, '*')<<"\n\n";
     
+    IncidentSystem system;
+    system.run();
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+    return 0;
+}
